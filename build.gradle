@@ -13,9 +13,9 @@ gradlePlugin {
     }
 }
 
-File pluginFile = new File(getBuildDir().toString() + "/libs/FlufGradle-1.0-SNAPSHOT.jar").getAbsoluteFile()
-URLClassLoader cloader = new URLClassLoader(new URL[]{pluginFile.toURL()}, getClass().getClassLoader())
-apply plugin: cloader.loadClass("lostembers.fluf.gradle.FlufPlugin")
+//File pluginFile = new File(getBuildDir().toString() + "/libs/fluf.gradle-1.0.jar").getAbsoluteFile()
+//URLClassLoader cloader = new URLClassLoader(new URL[]{pluginFile.toURL()}, getClass().getClassLoader())
+//apply plugin: cloader.loadClass("lostembers.fluf.gradle.FlufPlugin")
 
 group 'lostembers'
 version '1.0'
@@ -30,13 +30,13 @@ configurations {
     extraLibs
 }
 
-fluf {
-    mappings = "mojmap"
-    version = "1.18.2"
-    // TODO
-//    remapMCJarThreads = 42
-//    remapModThreads = 16
-}
+//fluf {
+//    mappings = "mojmap"
+//    version = "1.18.2"
+//    // TODO
+////    remapMCJarThreads = 42
+////    remapModThreads = 16
+//}
 
 dependencies {
     implementation gradleApi()

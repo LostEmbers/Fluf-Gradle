@@ -28,10 +28,7 @@ import java.util.Collections;
 
 public class FlufProject {
 	public final Project project;
-	public final RemapTask remapTaskInter;
-	public final RemapTask remapTaskMoj;
-	public final RemapTask remapTaskObsf;
-	public final RemapTask remapTaskSrg;
+	public final RemapTask remapTask;
 	public final ProxyTask doRemap;
 	public final ModJsonHandler handleJson;
 	public final WarningTask warnNormalBuild;
@@ -81,27 +78,9 @@ public class FlufProject {
 			remapMCTask.project = this;
 		}
 		/* internal tasks */
-		// TODO: why do I have 4 of these?
-		// they're all identical
-		// if I have only one of these, I don't need the proxy task
 		{
-			RemapTask task = createTask("remapIntermediary", RemapTask.class);
-			(remapTaskInter = task).buildDir = project.getBuildDir();
-			task.settings = settings;
-		}
-		{
-			RemapTask task = createTask("remapMoj", RemapTask.class);
-			(remapTaskMoj = task).buildDir = project.getBuildDir();
-			task.settings = settings;
-		}
-		{
-			RemapTask task = createTask("remapObsf", RemapTask.class);
-			(remapTaskObsf = task).buildDir = project.getBuildDir();
-			task.settings = settings;
-		}
-		{
-			RemapTask task = createTask("remapSrg", RemapTask.class);
-			(remapTaskSrg = task).buildDir = project.getBuildDir();
+			RemapTask task = createTask("remapMod", RemapTask.class);
+			(remapTask = task).buildDir = project.getBuildDir();
 			task.settings = settings;
 		}
 		{
@@ -135,10 +114,7 @@ public class FlufProject {
 	
 	public void setMappings(String mappings) {
 		switch (mappings) {
-			case "tsrg2" -> doRemap.task = remapTaskSrg;
-			case "intermediary" -> doRemap.task = remapTaskInter;
-			case "mojmap" -> doRemap.task = remapTaskMoj;
-			case "obsfucation" -> doRemap.task = remapTaskObsf;
+			case "tsrg2", "intermediary", "obsfucation", "mojmap" -> doRemap.task = remapTask;
 		}
 		for (BuildTask buildTask : buildTasks) buildTask.addTask(mappings, (RemapTask) doRemap.task);
 	}
