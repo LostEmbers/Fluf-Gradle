@@ -37,7 +37,7 @@ public abstract class RemapMCJarTask extends FlufTask {
 		File src = new File(dir + "/1.18.2.jar"); // TODO: make this more convenient
 		try {
 			JarFile file = new JarFile(src);
-			ThreadPool pool = new ThreadPool(42);
+			ThreadPool pool = new ThreadPool(project.settings.remapMCThreads);
 			ThreadObjectPool<HashMap<String, byte[]>> objectPool = new ThreadObjectPool<>(HashMap::new);
 			ThreadObjectPool<ArrayList<String>> dirs = new ThreadObjectPool<>(ArrayList::new);
 			ThreadObjectPool<ArrayList<String>> fails = new ThreadObjectPool<>(ArrayList::new);

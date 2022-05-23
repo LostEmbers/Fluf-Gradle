@@ -1,0 +1,20 @@
+File pluginFile = new File(getProjectDir().getAbsoluteFile().getParentFile().toString() + "/build/libs/fluf.gradle-1.0.jar").getAbsoluteFile()
+System.out.println(pluginFile)
+URLClassLoader cloader = new URLClassLoader(new URL[]{pluginFile.toURL()}, getClass().getClassLoader())
+
+apply plugin: "java"
+apply plugin: cloader.loadClass("lostembers.fluf.gradle.FlufPlugin")
+
+group 'lostembers'
+version '1.0'
+
+repositories {
+    mavenCentral()
+}
+
+fluf {
+    mappings = "mojmap"
+    version = "1.18.2"
+    remapMCJarThreads = 42
+    remapModThreads = 16
+}

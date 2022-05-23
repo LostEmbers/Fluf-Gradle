@@ -28,9 +28,9 @@ public abstract class RemapTask extends FlufTask {
 	public File buildDir = null;
 	//	protected final FlufRemapper remapper = new FlufRemapper();
 	protected Remapper remapper;
-	protected final ThreadPool pool = new ThreadPool(16);
 	public FlufMappings tsrg;
 	public Settings settings;
+	protected ThreadPool pool;
 	
 	protected void walk(File root, Consumer<File> action) {
 		for (File file : root.listFiles()) {
@@ -104,6 +104,7 @@ public abstract class RemapTask extends FlufTask {
 	}
 	
 	public void run() {
+		pool = new ThreadPool(settings.remapModThreads);
 		if (remapper == null) return;
 		File classesDir = new File(buildDir + "/classes");
 		walk(classesDir, (file) -> {

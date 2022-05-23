@@ -1,2 +1,3 @@
 rootProject.name = 'fluf.gradle'
+include 'Test'
 

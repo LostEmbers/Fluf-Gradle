@@ -120,6 +120,11 @@ public class FlufProject {
 	}
 	
 	private void setup(Settings settings) {
+		if (settings == null) throw new RuntimeException("A \"fluf\" block must be specified");
+		if (settings.mappings == null && settings.version == null) throw new RuntimeException("A \"fluf\" block must be specified");
+		if (settings.mappings == null) throw new RuntimeException("Your \"fluf\" block must specify the name of the mappings you want to use");
+		if (settings.version == null) throw new RuntimeException("Your \"fluf\" block must specify the name of the game version you want to use");
+		
 		String targetDir = "fluf_gradle/" + settings.getVersion() + "/" + settings.getMappings() + "/mapped-" + settings.getMappings();
 		File fl = new File(targetDir + ".jar").getAbsoluteFile();
 		if (!fl.getAbsoluteFile().exists()) remapMCTask.run();
