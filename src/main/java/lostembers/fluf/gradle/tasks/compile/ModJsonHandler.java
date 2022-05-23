@@ -32,22 +32,26 @@ public class ModJsonHandler extends FlufTask {
 				if (modJson.has("dependencies")) {
 					JsonObject dependencies = new JsonObject();
 					JsonObject obj = modJson.getAsJsonObject("dependencies");
-					for (String s : obj.keySet()) {
-						String depVersion = obj.get(s).getAsString();
-						if (depVersion.equals("x")) {
-							depVersion = "*";
-						} else if (depVersion.endsWith(".x")) {
-							depVersion = "~" + depVersion.replace(".x", "");
-						} else if (depVersion.contains("-")) {
-							if (depVersion.startsWith("(")) {
-								// TODO
-								throw new RuntimeException("NYI");
-							} else {
-								// TODO
-								throw new RuntimeException("NYI");
+					for (String type : obj.keySet()) {
+						if (!(type.equals("fabric") || type.equals("common"))) continue;
+						JsonObject deps = obj.getAsJsonObject(type);
+						for (String s : deps.keySet()) {
+							String depVersion = deps.get(s).getAsString();
+							if (depVersion.equals("x")) {
+								depVersion = "*";
+							} else if (depVersion.endsWith(".x")) {
+								depVersion = "~" + depVersion.replace(".x", "");
+							} else if (depVersion.contains("-")) {
+								if (depVersion.startsWith("(")) {
+									// TODO
+									throw new RuntimeException("NYI");
+								} else {
+									// TODO
+									throw new RuntimeException("NYI");
+								}
 							}
+							dependencies.addProperty(s, depVersion);
 						}
-						dependencies.addProperty(s, depVersion);
 					}
 					object.add("dependencies", dependencies);
 				}
@@ -76,6 +80,7 @@ public class ModJsonHandler extends FlufTask {
 		} catch (Throwable err) {
 			System.err.println("Failed to read fluf_mod.json.");
 			System.err.println("Does your mod json exist and follow conventions?");
+			System.err.println(err.getMessage());
 		}
 	}
 }

@@ -1,0 +1,12 @@
+{
+  "id": "test",
+  "name": "Test",
+  "version": "1.0.0",
+  "license": "MIT",
+  "dependencies": {
+    "common": {
+      "minecraft": "1.18.x"
+    }
+  },
+  "side": "any"
+}

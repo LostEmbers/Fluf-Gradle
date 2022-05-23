@@ -17,4 +17,5 @@ fluf {
     version = "1.18.2"
     remapMCJarThreads = 42
     remapModThreads = 16
+//    modJson = "fluf_mod.json"
 }
