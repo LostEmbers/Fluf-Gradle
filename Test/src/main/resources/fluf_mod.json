@@ -3,10 +3,20 @@
   "name": "Test",
   "version": "1.0.0",
   "license": "MIT",
+  "author": "GiantLuigi4",
+  "description": "A test mod for Fluf Gradle",
   "dependencies": {
     "common": {
       "minecraft": "1.18.x"
     }
   },
-  "side": "any"
+  "side": "any",
+  "entries": {
+    "common": [
+      "test/TestClass"
+    ]
+  },
+  "forge": {
+    "main": "test/ForgeMain"
+  }
 }

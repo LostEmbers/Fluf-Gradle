@@ -50,6 +50,8 @@ public class FlufProject {
 //		System.out.println(extension.getGreeter().get());
 		
 		/* compilation tasks */
+		ProxyTask dummyTask = createTask("dummy", ProxyTask.class);
+		dummyTask.dependsOn(getTask("classes"), getTask("build"));
 		{
 			BuildTask task = createTask("buildForge", BuildTask.class);
 			task.loader = "forge";
