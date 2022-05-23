@@ -1,13 +1,13 @@
 plugins {
     id 'java'
     id 'maven-publish'
-    id 'dev.gradleplugins.java-gradle-plugin' version '1.5'
+    id 'java-gradle-plugin'
 }
 
 gradlePlugin {
     plugins {
         FlufGradle {
-            id = 'lostembers.fluf.gradle'
+            id = 'FlufGradle'
             implementationClass = 'lostembers.fluf.gradle.FlufPlugin'
         }
     }
