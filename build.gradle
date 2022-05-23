@@ -19,8 +19,6 @@ File pluginFile = new File(getBuildDir().toString() + "/libs/FlufGradle-1.0-SNAP
 URLClassLoader cloader = new URLClassLoader(new URL[]{pluginFile.toURL()}, getClass().getClassLoader())
 apply plugin: cloader.loadClass("lostembers.fluf.gradle.FlufPlugin")
 
-// Configure the extension using a DSL block
-
 group 'org.example'
 version '1.0-SNAPSHOT'
 
