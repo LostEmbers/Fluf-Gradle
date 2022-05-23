@@ -1,23 +1,23 @@
-import lostembers.fluf.gradle.FlufPlugin
-
 import java.nio.file.Files
 
 plugins {
     id 'java'
-    id 'java-gradle-plugin'
-    id 'eclipse'
+    id 'maven-publish'
+    id 'dev.gradleplugins.java-gradle-plugin' version '1.5'
 }
 
 gradlePlugin {
     plugins {
-        flufGradle {
+        create("FlufGradle") {
             id = 'lostembers.fluf.gradle'
             implementationClass = 'lostembers.fluf.gradle.FlufPlugin'
         }
     }
 }
 
-apply plugin: FlufPlugin
+File pluginFile = new File(getBuildDir().toString() + "/libs/FlufGradle-1.0-SNAPSHOT.jar").getAbsoluteFile()
+URLClassLoader cloader = new URLClassLoader(new URL[]{pluginFile.toURL()}, getClass().getClassLoader())
+apply plugin: cloader.loadClass("lostembers.fluf.gradle.FlufPlugin")
 
 // Configure the extension using a DSL block
 
@@ -32,7 +32,6 @@ repositories {
 
 configurations {
     extraLibs
-//    fluf
 }
 
 fluf {
@@ -68,20 +67,20 @@ dependencies {
 jar {
     from {
         configurations.extraLibs.collect { it.isDirectory() ? it : zipTree(it) }
-        File f = new File("fluf_gradle/libs/").getAbsoluteFile()
-        if (!f.exists()) {
-            f.mkdirs()
-        }
-        configurations.extraLibs.collect {
-            File f1 = new File("fluf_gradle/libs/" + it.name).getAbsoluteFile()
-            System.out.println(f1)
-            if (!f1.exists()) {
-                Files.copy(it.toPath(), f1.toPath())
-            }
-        }
+//        File f = new File("fluf_gradle/libs/").getAbsoluteFile()
+//        if (!f.exists()) {
+//            f.mkdirs()
+//        }
+//        configurations.extraLibs.collect {
+//            File f1 = new File("fluf_gradle/libs/" + it.name).getAbsoluteFile()
+//            System.out.println(f1)
+//            if (!f1.exists()) {
+//                Files.copy(it.toPath(), f1.toPath())
+//            }
+//        }
     }
     exclude 'module-info.class'
-    exclude 'org.*'
+//    exclude 'org.*'
 }
 
 //import org.gradle.plugins.ide.eclipse.model.*
