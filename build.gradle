@@ -45,7 +45,8 @@ dependencies {
     // https://mvnrepository.com/artifact/net.minecraftforge/forgeflower
     extraLibs group: 'net.minecraftforge', name: 'forgeflower', version: '1.5.498.22'
 
-    configurations.api.extendsFrom(configurations.extraLibs)
+    configurations.compileOnly.extendsFrom(configurations.extraLibs)
+    configurations.runtimeOnly.extendsFrom(configurations.extraLibs)
 }
 
 //import java.nio.file.Files
