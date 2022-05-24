@@ -5,6 +5,7 @@ import lostembers.fluf.gradle.NameOnlyMojmapRemapper;
 import lostembers.fluf.gradle.RemapperStack;
 import lostembers.fluf.gradle.settings.Loader;
 import lostembers.fluf.gradle.settings.Settings;
+import lostembers.fluf.gradle.tasks.compile.fabric.FabricAPIMutator;
 import lostembers.fluf.gradle.tasks.generic.FlufTask;
 import lostembers.fluf.gradle.threading.ThreadPool;
 import lostembers.fluf.gradle.util.mappings.FlufMappings;
@@ -112,6 +113,8 @@ public abstract class RemapTask extends FlufTask {
 				ClassReader reader = new ClassReader(new FileInputStream(file));
 				ClassNode nd = new ClassNode();
 				reader.accept(nd, ClassReader.EXPAND_FRAMES);
+				if (Loader.target.equals("fabric"))
+					FabricAPIMutator.process(nd);
 				ClassWriter out = new ClassWriter(ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS);
 				ClassRemapper cmapper = new ClassRemapper(out, remapper);
 				nd.accept(cmapper);

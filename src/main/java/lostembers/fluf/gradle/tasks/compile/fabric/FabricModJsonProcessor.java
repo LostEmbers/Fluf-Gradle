@@ -136,6 +136,9 @@ public class FabricModJsonProcessor {
 				for (MethodNode methodNode : node.methods) {
 					if (methodNode.name.equals("<init>")) {
 						if (methodNode.desc.equals("()V")) {
+							// TODO: is this overkill? lol
+							methodNode.access = methodNode.access | Opcodes.ACC_SYNTHETIC;
+							
 							ArrayList<AbstractInsnNode> objInitNodes = new ArrayList<>();
 							ArrayList<AbstractInsnNode> modInitNodes = new ArrayList<>();
 							boolean hitSInit = false;

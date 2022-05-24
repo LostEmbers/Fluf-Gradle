@@ -1,4 +1,4 @@
-File pluginFile = new File(getProjectDir().getAbsoluteFile().getParentFile().toString() + "/build/libs/fluf.gradle-1.0.jar").getAbsoluteFile()
+File pluginFile = new File(getProjectDir().getAbsoluteFile().getParentFile().toString() + "/build/libs/FlufGradle-1.0.jar").getAbsoluteFile()
 System.out.println(pluginFile)
 URLClassLoader cloader = new URLClassLoader(new URL[]{pluginFile.toURL()}, getClass().getClassLoader())
 
@@ -18,4 +18,8 @@ fluf {
     remapMCJarThreads = 42
     remapModThreads = 16
 //    modJson = "fluf_mod.json"
+}
+
+dependencies {
+    implementation files("FlufAPI-1.0.jar")
 }
