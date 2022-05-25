@@ -25,6 +25,7 @@ public class ThreadPool {
 						return threads[i];
 					}
 				}
+				if (threads.length == 0) r.run();
 				try {
 					// helps with CPU usage, at least on older JREs/JDKs
 					Thread.sleep(1);

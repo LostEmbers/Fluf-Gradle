@@ -12,4 +12,5 @@ public abstract class APICallMutator {
 	
 	public abstract void handle(AbstractInsnNode target, InsnList instructions);
 	public abstract boolean processesCall(String className, String functionName);
+	public abstract void reset();
 }

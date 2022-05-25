@@ -6,8 +6,11 @@ import lostembers.fluf.gradle.RemapperStack;
 import lostembers.fluf.gradle.settings.Loader;
 import lostembers.fluf.gradle.settings.Settings;
 import lostembers.fluf.gradle.tasks.compile.fabric.FabricAPIMutator;
+import lostembers.fluf.gradle.tasks.compile.forge.ForgeAPIMutator;
 import lostembers.fluf.gradle.tasks.generic.FlufTask;
+import lostembers.fluf.gradle.threading.ThreadObjectPool;
 import lostembers.fluf.gradle.threading.ThreadPool;
+import lostembers.fluf.gradle.util.Hierarchy;
 import lostembers.fluf.gradle.util.mappings.FlufMappings;
 import lostembers.fluf.gradle.util.mappings.Mojmap;
 import lostembers.fluf.gradle.util.mappings.Tsrg2;
@@ -18,14 +21,11 @@ import org.objectweb.asm.commons.ClassRemapper;
 import org.objectweb.asm.commons.Remapper;
 import org.objectweb.asm.tree.ClassNode;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.URL;
 import java.util.function.Consumer;
 
-public abstract class RemapTask extends FlufTask {
+public abstract class ASMTask extends FlufTask {
 	public File buildDir = null;
 	//	protected final FlufRemapper remapper = new FlufRemapper();
 	protected Remapper remapper;
@@ -92,7 +92,7 @@ public abstract class RemapTask extends FlufTask {
 
 //	public final Mappings intermediary;
 	
-	public RemapTask() {
+	public ASMTask() {
 //		try {
 //			// TODO: make sure this closes the stream
 ////			intermediary = MappingsProvider.readTinyMappings(new URL("https://raw.githubusercontent.com/FabricMC/intermediary/master/mappings/" + Defaults.GAME_VERSION + ".tiny").openStream());
@@ -108,19 +108,60 @@ public abstract class RemapTask extends FlufTask {
 		pool = new ThreadPool(settings.remapModThreads);
 		if (remapper == null) return;
 		File classesDir = new File(buildDir + "/classes");
+		ThreadObjectPool<Hierarchy> hierarchyThreadObjectPool = new ThreadObjectPool<>(Hierarchy::new);
+		
+		Hierarchy mcHierarchy = new Hierarchy();
+		// this doesn't need to block the thread
+		pool.startNext(()->{
+			String targetDir = "fluf_gradle/" + settings.getVersion() + "/" + settings.getMappings() + "/hierarchy-" + settings.getMappings() + ".txt";
+			try {
+				FileInputStream inputStream = new FileInputStream(new File(targetDir).getAbsoluteFile());
+				byte[] bytes = inputStream.readAllBytes();
+				inputStream.close();
+				mcHierarchy.read(new String(bytes));
+			} catch (Throwable ignored) {
+			}
+		});
+		
 		walk(classesDir, (file) -> {
 			try {
-				ClassReader reader = new ClassReader(new FileInputStream(file));
+				InputStream stream = new FileInputStream(file);
+				byte[] bytes = stream.readAllBytes();
+				stream.close();
+				ClassReader reader = new ClassReader(bytes);
+				ClassNode nd = new ClassNode();
+				reader.accept(nd, ClassReader.EXPAND_FRAMES);
+				hierarchyThreadObjectPool.get().accept(nd);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		});
+		pool.await();
+		
+		Hierarchy merged = new Hierarchy();
+		for (Hierarchy value : hierarchyThreadObjectPool.getValues()) merged.read(value.toString());
+		merged.inner = mcHierarchy;
+		((RemapperStack) remapper).setHierarchy(merged);
+		
+		walk(classesDir, (file) -> {
+			try {
+				InputStream stream = new FileInputStream(file);
+				byte[] bytes = stream.readAllBytes();
+				stream.close();
+				ClassReader reader = new ClassReader(bytes);
 				ClassNode nd = new ClassNode();
 				reader.accept(nd, ClassReader.EXPAND_FRAMES);
 				if (Loader.target.equals("fabric"))
 					FabricAPIMutator.process(nd);
+				else if (Loader.target.equals("forge"))
+					ForgeAPIMutator.process(nd);
 				ClassWriter out = new ClassWriter(ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS);
 				ClassRemapper cmapper = new ClassRemapper(out, remapper);
 				nd.accept(cmapper);
 				FileOutputStream outputStream = new FileOutputStream(file);
 				outputStream.write(out.toByteArray());
 				outputStream.close();
+				outputStream.flush();
 			} catch (IOException err) {
 				err.printStackTrace();
 				System.err.println("An error occurred while trying to remap classes.");

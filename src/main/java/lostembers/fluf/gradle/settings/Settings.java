@@ -10,6 +10,7 @@ public abstract class Settings extends GroovyObjectSupport {
 	public String version;
 	public int remapMCThreads = 42;
 	public int remapModThreads = 16;
+	public String fabricVersion = null;
 	public FlufProject project;
 	
 	public int getRemapMCJarThreads() {
@@ -38,6 +39,10 @@ public abstract class Settings extends GroovyObjectSupport {
 	
 	public String getMappings() {
 		return mappings;
+	}
+	
+	public String getFabricVersion() {
+		return fabricVersion;
 	}
 	
 	public void setMappings(String mappings) {

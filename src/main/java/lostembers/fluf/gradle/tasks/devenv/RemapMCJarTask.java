@@ -2,6 +2,7 @@ package lostembers.fluf.gradle.tasks.devenv;
 
 import lostembers.fluf.gradle.FlufProject;
 import lostembers.fluf.gradle.FlufRemapper;
+import lostembers.fluf.gradle.RemapperStack;
 import lostembers.fluf.gradle.tasks.generic.FlufTask;
 import lostembers.fluf.gradle.threading.ThreadObjectPool;
 import lostembers.fluf.gradle.threading.ThreadPool;
@@ -14,10 +15,12 @@ import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.commons.ClassRemapper;
 import org.objectweb.asm.commons.Remapper;
 import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.FieldNode;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -32,7 +35,7 @@ public abstract class RemapMCJarTask extends FlufTask {
 	
 	public void run() {
 		File dir = project.project.getBuildDir();
-		String targetDir = "fluf_gradle/" + project.settings.getVersion() + "/" + project.settings.getMappings() + "/mapped-" + project.settings.getMappings();
+		String targetDir = project.getGameJarPath();
 		File fl = new File(targetDir + ".jar").getAbsoluteFile();
 		File src = new File(dir + "/1.18.2.jar"); // TODO: make this more convenient
 		try {
@@ -59,6 +62,51 @@ public abstract class RemapMCJarTask extends FlufTask {
 				};
 			};
 			
+			Hierarchy hierarchy = new Hierarchy();
+			{
+				// generate hierarchy
+				ThreadObjectPool<Hierarchy> hierarchies = new ThreadObjectPool<>(Hierarchy::new);
+				ThreadObjectPool<Hierarchy> hierarchiesObf = new ThreadObjectPool<>(Hierarchy::new);
+				pool.completeAsync(
+						() -> file.entries().asIterator().forEachRemaining(jarEntry -> {
+							if (jarEntry.getName().endsWith(".class")) {
+								try {
+									InputStream stream = file.getInputStream(jarEntry);
+									byte[] bytes = stream.readAllBytes();
+									stream.close();
+									pool.startNext(() -> {
+										ClassNode node = new ClassNode();
+										ClassReader reader = new ClassReader(bytes);
+										reader.accept(node, ClassReader.EXPAND_FRAMES);
+										hierarchiesObf.get().accept(node);
+										String name = remapper.map(node.name);
+										ArrayList<String> inherit = new ArrayList<>();
+										for (String anInterface : node.interfaces)
+											inherit.add(remapper.map(anInterface));
+										inherit.add(remapper.map(node.superName));
+										hierarchies.get().add(name, inherit);
+									});
+								} catch (Throwable ignored) {
+								}
+							}
+						})
+				);
+				StringBuilder txt = new StringBuilder();
+				for (Hierarchy value : hierarchies.getValues()) {
+					txt.append(value.toString());
+				}
+				hierarchy.read(txt.toString());
+				
+				Hierarchy hierarchyObf = new Hierarchy();
+				txt = new StringBuilder();
+				for (Hierarchy value : hierarchiesObf.getValues()) {
+					txt.append(value.toString());
+				}
+				hierarchyObf.read(txt.toString());
+				if (remapper instanceof FlufRemapper) ((FlufRemapper) remapper).hierarchy = hierarchyObf;
+				else if (remapper instanceof RemapperStack) ((RemapperStack) remapper).setHierarchy(hierarchyObf);
+			}
+			
 			AtomicInteger countDone = new AtomicInteger();
 			int[] count = new int[]{0};
 			ArrayList<String> entries = new ArrayList<>();
@@ -69,7 +117,6 @@ public abstract class RemapMCJarTask extends FlufTask {
 				}
 			});
 			final Object lock = new Object();
-			ThreadObjectPool<Hierarchy> hierarchies = new ThreadObjectPool<>(Hierarchy::new);
 			ThreadObjectPool<ArrayList<String>> processed = new ThreadObjectPool<>(ArrayList::new);
 			pool.completeAsync(
 					// TODO: figure out why some classes get missed
@@ -96,7 +143,6 @@ public abstract class RemapMCJarTask extends FlufTask {
 //											ClassWriter out = new ClassWriter(ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS);
 											ClassWriter out = new ClassWriter(0);
 											String name = remapped.name;
-											hierarchies.get().accept(remapped);
 											remapped.accept(out);
 											objectPool.get().put(name.replace(".", "/") + ".class", out.toByteArray());
 											processed.get().add(jarEntry.getName());
@@ -141,10 +187,6 @@ public abstract class RemapMCJarTask extends FlufTask {
 			out.close();
 			out.flush();
 			
-			StringBuilder txt = new StringBuilder();
-			for (Hierarchy value : hierarchies.getValues()) {
-				txt.append(value.toString());
-			}
 			{
 				File fl1 = new File(targetDir.replace("mapped", "hierarchy") + ".txt").getAbsoluteFile();
 				if (fl1.exists()) {
@@ -152,7 +194,7 @@ public abstract class RemapMCJarTask extends FlufTask {
 					fl1.createNewFile();
 				}
 				FileOutputStream outputStream = new FileOutputStream(fl1);
-				outputStream.write(txt.toString().getBytes());
+				outputStream.write(hierarchy.toString().getBytes());
 				outputStream.close();
 				outputStream.flush();
 			}
@@ -162,7 +204,7 @@ public abstract class RemapMCJarTask extends FlufTask {
 					fl1.delete();
 					fl1.createNewFile();
 				}
-				txt = new StringBuilder();
+				StringBuilder txt = new StringBuilder();
 				txt.append("Remapped: ").append(c).append("/").append(count[0]).append(" classes\n");
 				boolean failedAny = !fails.getValues().isEmpty();
 				if (failedAny) {

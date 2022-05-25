@@ -18,7 +18,6 @@ public class MainClassFabricator {
 		String str = buildDir + "/";
 		String cname = forgeSpecification.get("main").getAsString();
 		str += "classes/java/main/" + cname + ".class";
-		System.err.println(buildDir);
 		ClassNode node = new ClassNode();
 		node.version = Opcodes.V1_8;
 		node.name = cname;

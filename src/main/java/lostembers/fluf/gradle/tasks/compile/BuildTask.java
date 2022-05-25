@@ -14,9 +14,9 @@ public class BuildTask extends FlufTask {
 			tasks.get(s).setup(s);
 	}
 	
-	private final HashMap<String, RemapTask> tasks = new HashMap<>();
+	private final HashMap<String, ASMTask> tasks = new HashMap<>();
 	
-	public void addTask(String intermediary, RemapTask remapTaskInter) {
+	public void addTask(String intermediary, ASMTask remapTaskInter) {
 		tasks.put(intermediary, remapTaskInter);
 	}
 }

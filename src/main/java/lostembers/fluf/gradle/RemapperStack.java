@@ -1,14 +1,39 @@
 package lostembers.fluf.gradle;
 
+import lostembers.fluf.gradle.util.Hierarchy;
 import org.objectweb.asm.commons.Remapper;
 
 import java.util.ArrayList;
 
 public class RemapperStack extends Remapper {
+	Hierarchy hierarchy;
+	
 	ArrayList<Remapper> stack = new ArrayList<>();
 	
 	public void add(Remapper remapper) {
 		stack.add(remapper);
+		if (remapper instanceof FlufRemapper) {
+			((FlufRemapper) remapper).parent = this;
+			((FlufRemapper) remapper).hierarchy = hierarchy;
+			if (hierarchy != null) hierarchy = hierarchy.remap(remapper);
+		}
+	}
+	
+	public Remapper[] mappers() {
+		return stack.toArray(new Remapper[0]);
+	}
+	
+	public void setHierarchy(Hierarchy hierarchy) {
+		this.hierarchy = hierarchy;
+		for (Remapper remapper : stack) {
+			if (remapper instanceof RemapperStack) {
+				((RemapperStack) remapper).setHierarchy(hierarchy);
+			} else if (remapper instanceof FlufRemapper) {
+				((FlufRemapper) remapper).hierarchy = hierarchy;
+			}
+			hierarchy = hierarchy.remap(remapper);
+		}
+		this.hierarchy = hierarchy;
 	}
 	
 	@Override

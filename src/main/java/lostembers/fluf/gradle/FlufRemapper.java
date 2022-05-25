@@ -1,5 +1,6 @@
 package lostembers.fluf.gradle;
 
+import lostembers.fluf.gradle.util.Hierarchy;
 import lostembers.fluf.gradle.util.mappings.FlufMappings;
 import lostembers.fluf.gradle.util.mappings.MappingsClass;
 import lostembers.fluf.gradle.util.mappings.MappingsField;
@@ -11,6 +12,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class FlufRemapper extends Remapper {
+	public Hierarchy hierarchy;
+	public Remapper parent;
 	Mappings mappings;
 	
 	Map<String, String> classMap = new HashMap<>();
@@ -118,7 +121,32 @@ public class FlufRemapper extends Remapper {
 			owner = owner.substring(1, owner.length() - 1);
 		if (fieldMap.containsKey(owner)) {
 			Map<String, String> map = fieldMap.get(owner);
-			if (map.containsKey(name)) return map.get(name);
+			if (map.containsKey(name)) {
+				String str = map.get(name);
+//				if (str.startsWith("$SwitchMap$") && !descriptor.equals("[I"))
+//					System.err.println("Field " + owner + "#" + name + " happened to have the same name as " + str);
+//				else
+					return str;
+			}
+		}
+		if (hierarchy != null) {
+			// TODO: check
+			if (hierarchy.contains(owner)) {
+				for (String s : hierarchy.get(owner)) {
+					String str = mapFieldName(s, name, descriptor);
+					if (!str.equals(name)) return str;
+					if (parent instanceof RemapperStack) {
+						for (Remapper mapper : ((RemapperStack) parent).mappers()) {
+							s = mapper.map(s);
+							str = mapFieldName(s, name, descriptor);
+//							if (str.startsWith("$SwitchMap$") && !descriptor.equals("[I"))
+//								System.err.println("Field " + owner + "#" + name + " happened to have the same name as " + str);
+//							else
+								if (!str.equals(name)) return str;
+						}
+					}
+				}
+			}
 		}
 		return super.mapFieldName(owner, name, descriptor);
 	}
@@ -138,10 +166,27 @@ public class FlufRemapper extends Remapper {
 	}
 	
 	@Override
+	// TODO: optimize?
 	public String mapMethodName(String owner, String name, String descriptor) {
 		if (methodMap.containsKey(owner)) {
 			Map<String, String> map = methodMap.get(owner);
 			if (map.containsKey(name + descriptor)) return map.get(name + descriptor).split("\\(")[0];
+		}
+		if (hierarchy != null) {
+			// TODO: check
+			if (hierarchy.contains(owner)) {
+				for (String s : hierarchy.get(owner)) {
+					String str = mapMethodName(s, name, descriptor);
+					if (!str.equals(name)) return str;
+					if (parent instanceof RemapperStack) {
+						for (Remapper mapper : ((RemapperStack) parent).mappers()) {
+							s = mapper.map(s);
+							str = mapMethodName(s, name, descriptor);
+							if (!str.equals(name)) return str;
+						}
+					}
+				}
+			}
 		}
 		return super.mapMethodName(owner, name, descriptor);
 	}

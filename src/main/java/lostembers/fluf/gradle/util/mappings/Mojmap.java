@@ -76,8 +76,14 @@ public class Mojmap {
 				String mojName = split[0].replace(".", "/");
 				String obfName = split[1].replace(".", "/");
 				if (obfName.endsWith(":")) obfName = obfName.substring(0, obfName.length() - 1);
-				if (mappingsField != null) mappingsClass.addField(mappingsField);
-				if (mappingsMethod != null) mappingsClass.addMethod(mappingsMethod);
+				if (mappingsField != null) {
+					mappingsClass.addField(mappingsField);
+					mappingsField = null;
+				}
+				if (mappingsMethod != null) {
+					mappingsClass.addMethod(mappingsMethod);
+					mappingsMethod = null;
+				}
 				if (mappingsClass != null) mappings.addClass(mappingsClass);
 				mappingsClass = new MappingsClass(obfName, mojName);
 			} else if (line.contains("(")) {
